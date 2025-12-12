@@ -3,7 +3,7 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
-    android:background="#F5F7FA">
+    android:background="@drawable/form1pic">
 
     <LinearLayout
         android:layout_width="match_parent"

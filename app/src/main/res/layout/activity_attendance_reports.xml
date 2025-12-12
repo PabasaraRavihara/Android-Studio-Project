@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="#F5F7FA"
+    android:background="@drawable/form1pic"
     android:fillViewport="true">
 
     <LinearLayout
@@ -22,6 +22,7 @@
             android:layout_marginBottom="24dp"/>
 
         <TextView
+            android:id="@+id/lblSelectStudent"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Select Student"
@@ -47,7 +48,6 @@
             android:backgroundTint="#3B82F6"
             android:layout_marginBottom="32dp"/>
 
-        <!-- Report Card -->
         <androidx.cardview.widget.CardView
             android:id="@+id/reportLayout"
             android:layout_width="match_parent"
@@ -61,9 +61,8 @@
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:padding="24dp"
-                android:background="#FFFFFF">
+                android:background="#E6FFFFFF">
 
-                <!-- Student Info -->
                 <TextView
                     android:id="@+id/studentNameTxt"
                     android:layout_width="wrap_content"
@@ -92,7 +91,6 @@
                     android:textColor="#64748B"
                     android:layout_marginBottom="24dp"/>
 
-                <!-- Stats -->
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
@@ -108,7 +106,6 @@
                     android:textColor="#1E293B"
                     android:layout_marginBottom="16dp"/>
 
-                <!-- Stats Grid -->
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -203,7 +200,6 @@
 
                 </LinearLayout>
 
-                <!-- Percentage & Status -->
                 <View
                     android:layout_width="match_parent"
                     android:layout_height="1dp"
@@ -237,6 +233,16 @@
                     android:textSize="18sp"
                     android:textStyle="bold"
                     android:textColor="#10B981"/>
+
+                <Button
+                    android:id="@+id/btnSavePdf"
+                    android:layout_width="match_parent"
+                    android:layout_height="50dp"
+                    android:text="💾 Save as PDF"
+                    android:textSize="16sp"
+                    android:backgroundTint="#607D8B"
+                    android:layout_marginTop="24dp"
+                    android:visibility="gone"/>
 
             </LinearLayout>
 

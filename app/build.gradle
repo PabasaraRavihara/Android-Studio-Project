@@ -45,6 +45,12 @@ dependencies {
     // පරණ constraint-layout වෙනුවට අලුත් එක
     implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
 
+    // QR Code Generate (zxing)
+    implementation 'com.google.zxing:core:3.4.1'
+
+    // QR Code Scan (Code Scanner)
+    implementation 'com.github.yuriy-budiyev:code-scanner:2.3.2'
+
     // Testing Libraries (අලුත් AndroidX versions)
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.4'

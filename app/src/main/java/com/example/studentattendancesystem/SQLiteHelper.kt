@@ -42,7 +42,6 @@ class SQLiteHelper(context: Context) :
     }
 
     override fun onCreate(db: SQLiteDatabase) {
-        // Create Users Table
         val createUsers = """
             CREATE TABLE $TABLE_USERS (
               $COL_USER_ID INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -53,7 +52,6 @@ class SQLiteHelper(context: Context) :
             );
         """.trimIndent()
 
-        // Create Students Table
         val createStudents = """
             CREATE TABLE $TABLE_STUDENTS (
               $COL_STUDENT_ID INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -66,7 +64,6 @@ class SQLiteHelper(context: Context) :
             );
         """.trimIndent()
 
-        // Create Attendance Table
         val createAttendance = """
             CREATE TABLE $TABLE_ATTENDANCE (
               $COL_ATT_ID INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -148,14 +145,7 @@ class SQLiteHelper(context: Context) :
 
     // ==================== STUDENT FUNCTIONS ====================
 
-    fun addStudent(
-        studentId: String,
-        name: String,
-        department: String,
-        year: String,
-        email: String? = null,
-        phone: String? = null
-    ): Long {
+    fun addStudent(studentId: String, name: String, department: String, year: String, email: String? = null, phone: String? = null): Long {
         val db = writableDatabase
         val cv = ContentValues().apply {
             put(COL_STUDENT_REG, studentId)
@@ -191,45 +181,30 @@ class SQLiteHelper(context: Context) :
         return list
     }
 
-    fun getStudentsByDepartmentYear(department: String?, year: String?): ArrayList<Student> {
-        val list = ArrayList<Student>()
+    // NEW FUNCTION: Get Student by Registration Number (Username)
+    fun getStudentByReg(regNo: String): Student? {
         val db = readableDatabase
-
-        val query = buildString {
-            append("SELECT * FROM $TABLE_STUDENTS WHERE 1=1")
-            if (!department.isNullOrEmpty()) append(" AND $COL_DEPARTMENT='$department'")
-            if (!year.isNullOrEmpty()) append(" AND $COL_YEAR='$year'")
-            append(" ORDER BY $COL_NAME")
-        }
-
-        val cursor = db.rawQuery(query, null)
+        val cursor = db.rawQuery(
+            "SELECT * FROM $TABLE_STUDENTS WHERE $COL_STUDENT_REG=?",
+            arrayOf(regNo)
+        )
+        var student: Student? = null
         if (cursor.moveToFirst()) {
-            do {
-                val s = Student(
-                    id = cursor.getInt(cursor.getColumnIndexOrThrow(COL_STUDENT_ID)),
-                    studentCode = cursor.getString(cursor.getColumnIndexOrThrow(COL_STUDENT_REG)),
-                    name = cursor.getString(cursor.getColumnIndexOrThrow(COL_NAME)),
-                    department = cursor.getString(cursor.getColumnIndexOrThrow(COL_DEPARTMENT)),
-                    year = cursor.getString(cursor.getColumnIndexOrThrow(COL_YEAR)),
-                    email = cursor.getString(cursor.getColumnIndexOrThrow(COL_EMAIL)),
-                    phone = cursor.getString(cursor.getColumnIndexOrThrow(COL_PHONE))
-                )
-                list.add(s)
-            } while (cursor.moveToNext())
+            student = Student(
+                id = cursor.getInt(cursor.getColumnIndexOrThrow(COL_STUDENT_ID)),
+                studentCode = cursor.getString(cursor.getColumnIndexOrThrow(COL_STUDENT_REG)),
+                name = cursor.getString(cursor.getColumnIndexOrThrow(COL_NAME)),
+                department = cursor.getString(cursor.getColumnIndexOrThrow(COL_DEPARTMENT)),
+                year = cursor.getString(cursor.getColumnIndexOrThrow(COL_YEAR)),
+                email = cursor.getString(cursor.getColumnIndexOrThrow(COL_EMAIL)),
+                phone = cursor.getString(cursor.getColumnIndexOrThrow(COL_PHONE))
+            )
         }
         cursor.close()
-        return list
+        return student
     }
 
-    fun updateStudent(
-        id: Int,
-        studentCode: String,
-        name: String,
-        department: String,
-        year: String,
-        email: String? = null,
-        phone: String? = null
-    ): Int {
+    fun updateStudent(id: Int, studentCode: String, name: String, department: String, year: String, email: String? = null, phone: String? = null): Int {
         val db = writableDatabase
         val cv = ContentValues().apply {
             put(COL_STUDENT_REG, studentCode)
@@ -261,10 +236,7 @@ class SQLiteHelper(context: Context) :
     fun getAllDepartments(): List<String> {
         val list = ArrayList<String>()
         val db = readableDatabase
-        val cursor = db.rawQuery(
-            "SELECT DISTINCT $COL_DEPARTMENT FROM $TABLE_STUDENTS WHERE $COL_DEPARTMENT IS NOT NULL ORDER BY $COL_DEPARTMENT",
-            null
-        )
+        val cursor = db.rawQuery("SELECT DISTINCT $COL_DEPARTMENT FROM $TABLE_STUDENTS WHERE $COL_DEPARTMENT IS NOT NULL ORDER BY $COL_DEPARTMENT", null)
         if (cursor.moveToFirst()) {
             do {
                 list.add(cursor.getString(0))
@@ -276,28 +248,13 @@ class SQLiteHelper(context: Context) :
 
     // ==================== ATTENDANCE FUNCTIONS ====================
 
-    fun markAttendance(
-        studentId: Int,
-        date: String,
-        status: String,
-        subject: String?,
-        markedBy: String? = null
-    ): Long {
+    fun markAttendance(studentId: Int, date: String, status: String, subject: String?, markedBy: String? = null): Long {
         val db = writableDatabase
 
-        // Delete existing record
         if (subject != null) {
-            db.delete(
-                TABLE_ATTENDANCE,
-                "$COL_ATT_STUDENT_FK=? AND $COL_DATE=? AND $COL_SUBJECT=?",
-                arrayOf(studentId.toString(), date, subject)
-            )
+            db.delete(TABLE_ATTENDANCE, "$COL_ATT_STUDENT_FK=? AND $COL_DATE=? AND $COL_SUBJECT=?", arrayOf(studentId.toString(), date, subject))
         } else {
-            db.delete(
-                TABLE_ATTENDANCE,
-                "$COL_ATT_STUDENT_FK=? AND $COL_DATE=? AND ($COL_SUBJECT IS NULL OR $COL_SUBJECT='')",
-                arrayOf(studentId.toString(), date)
-            )
+            db.delete(TABLE_ATTENDANCE, "$COL_ATT_STUDENT_FK=? AND $COL_DATE=? AND ($COL_SUBJECT IS NULL OR $COL_SUBJECT='')", arrayOf(studentId.toString(), date))
         }
 
         val cv = ContentValues().apply {
@@ -360,40 +317,6 @@ class SQLiteHelper(context: Context) :
         return list
     }
 
-    fun getAttendanceForStudent(studentId: Int): ArrayList<AttendanceRecord> {
-        val list = ArrayList<AttendanceRecord>()
-        val db = readableDatabase
-
-        val query = """
-            SELECT a.$COL_ATT_ID, s.$COL_NAME, s.$COL_STUDENT_REG, s.$COL_DEPARTMENT, s.$COL_YEAR,
-                   a.$COL_DATE, a.$COL_STATUS, a.$COL_SUBJECT, a.$COL_MARKED_BY
-            FROM $TABLE_ATTENDANCE a
-            JOIN $TABLE_STUDENTS s ON a.$COL_ATT_STUDENT_FK = s.$COL_STUDENT_ID
-            WHERE s.$COL_STUDENT_ID = ?
-            ORDER BY a.$COL_DATE DESC
-        """.trimIndent()
-
-        val cursor = db.rawQuery(query, arrayOf(studentId.toString()))
-        if (cursor.moveToFirst()) {
-            do {
-                val record = AttendanceRecord(
-                    id = cursor.getInt(0),
-                    studentName = cursor.getString(1),
-                    studentCode = cursor.getString(2),
-                    department = cursor.getString(3),
-                    year = cursor.getString(4),
-                    date = cursor.getString(5),
-                    status = cursor.getString(6),
-                    subject = cursor.getString(7),
-                    markedBy = cursor.getString(8)
-                )
-                list.add(record)
-            } while (cursor.moveToNext())
-        }
-        cursor.close()
-        return list
-    }
-
     fun getAttendanceStats(studentId: Int): AttendanceStats {
         val db = readableDatabase
         val cursor = db.rawQuery(
@@ -420,4 +343,3 @@ class SQLiteHelper(context: Context) :
         return stats
     }
 }
-
