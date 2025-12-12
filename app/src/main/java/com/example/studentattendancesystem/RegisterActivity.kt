@@ -97,7 +97,17 @@ class RegisterActivity : AppCompatActivity() {
         val userType = when (selectedRadio.id) {
             R.id.radioAdmin -> "admin"
             R.id.radioTeacher -> "teacher"
+            R.id.radioStudent -> "student" // Handle student logic
             else -> "teacher"
+        }
+
+        // SECURITY CHECK: If student, Username MUST be their Reg No
+        if (userType == "student") {
+            if (!db.studentRegExists(username)) {
+                usernameInput.error = "Reg No not found in system!"
+                Toast.makeText(this, "Student Registration Failed: Your Reg No was not found. Ask your teacher to add you first.", Toast.LENGTH_LONG).show()
+                return
+            }
         }
 
         // Insert user
