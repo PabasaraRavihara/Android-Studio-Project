@@ -3,16 +3,20 @@
   <component name="DesignSurface">
     <option name="filePathToZoomLevelMap">
       <map>
-        <entry key="..\:/photo edit/app/src/main/res/layout/activity_add_student.xml" value="0.1828793774319066" />
-        <entry key="..\:/photo edit/app/src/main/res/layout/activity_main.xml" value="0.13196555217831812" />
+        <entry key="..\:/photo edit/app/src/main/res/layout/activity_add_student.xml" value="0.2" />
+        <entry key="..\:/photo edit/app/src/main/res/layout/activity_attendance_reports.xml" value="0.1956521739130435" />
+        <entry key="..\:/photo edit/app/src/main/res/layout/activity_login.xml" value="0.1956521739130435" />
+        <entry key="..\:/photo edit/app/src/main/res/layout/activity_main.xml" value="0.264" />
         <entry key="..\:/photo edit/app/src/main/res/layout/activity_manage_students.xml" value="0.22826086956521738" />
         <entry key="..\:/photo edit/app/src/main/res/layout/activity_mark_attendance.xml" value="0.264" />
-        <entry key="..\:/photo edit/app/src/main/res/layout/activity_view_attendance.xml" value="0.264" />
-        <entry key="..\:/photo edit/app/src/main/res/layout/dialog_edit_student.xml" value="0.22826086956521738" />
+        <entry key="..\:/photo edit/app/src/main/res/layout/activity_register.xml" value="0.1956521739130435" />
+        <entry key="..\:/photo edit/app/src/main/res/layout/activity_view_attendance.xml" value="0.2" />
+        <entry key="..\:/photo edit/app/src/main/res/layout/dialog_edit_student.xml" value="0.2" />
         <entry key="..\:/photo edit/app/src/main/res/layout/item_attendance.xml" value="0.264" />
+        <entry key="..\:/photo edit/app/src/main/res/layout/item_attendance_record.xml" value="0.264" />
         <entry key="..\:/photo edit/app/src/main/res/layout/item_student.xml" value="0.22916666666666666" />
-        <entry key="..\:/photo edit/app/src/main/res/layout/item_student_attendance.xml" value="0.22826086956521738" />
-        <entry key="..\:/photo edit/app/src/main/res/layout/item_student_row.xml" value="0.22826086956521738" />
+        <entry key="..\:/photo edit/app/src/main/res/layout/item_student_attendance.xml" value="0.2" />
+        <entry key="..\:/photo edit/app/src/main/res/layout/item_student_row.xml" value="0.2" />
         <entry key="..\:/photo edit/app/src/main/res/layout/styles.xml" value="0.12512664640324214" />
       </map>
     </option>

@@ -19,16 +19,16 @@ class StudentAdapter(
     }
 
     inner class VH(view: View) : RecyclerView.ViewHolder(view) {
-        // වැරදි ලයින් එක මැකුවා (val itemView: Any)
         val name: TextView = view.findViewById(R.id.tvName)
         val reg: TextView = view.findViewById(R.id.tvReg)
+        val dept: TextView = view.findViewById(R.id.tvDept)
         val editBtn: ImageButton = view.findViewById(R.id.btnEdit)
         val delBtn: ImageButton = view.findViewById(R.id.btnDelete)
     }
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
-        // item_student_row.xml එක මෙතනට call වෙනවා
-        val v = LayoutInflater.from(parent.context).inflate(R.layout.item_student_row, parent, false)
+        val v = LayoutInflater.from(parent.context)
+            .inflate(R.layout.item_student_row, parent, false)
         return VH(v)
     }
 
@@ -36,11 +36,17 @@ class StudentAdapter(
         val s = items[position]
         holder.name.text = s.name
         holder.reg.text = s.studentCode
+        holder.dept.text = "${s.department} - ${s.year}"
 
-        // holder.itemView කියන එක parent class එකෙන් ඉබේම එනවා
-        holder.itemView.setOnClickListener { listener.onItemClick(s) }
-        holder.editBtn.setOnClickListener { listener.onEdit(s) }
-        holder.delBtn.setOnClickListener { listener.onDelete(s) }
+        holder.itemView.setOnClickListener {
+            listener.onItemClick(s)
+        }
+        holder.editBtn.setOnClickListener {
+            listener.onEdit(s)
+        }
+        holder.delBtn.setOnClickListener {
+            listener.onDelete(s)
+        }
     }
 
     override fun getItemCount(): Int = items.size

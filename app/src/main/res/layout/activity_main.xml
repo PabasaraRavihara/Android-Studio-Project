@@ -1,39 +1,135 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:gravity="center"
-    android:orientation="vertical"
-    android:padding="24dp"
-    android:background="#F3F6F9">
+    android:background="#F5F7FA"
+    android:fillViewport="true">
 
-    <TextView
-        android:text="Student Attendance System"
-        android:textSize="24sp"
-        android:textStyle="bold"
-        android:gravity="center"
-        android:layout_marginBottom="40dp"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
-
-    <Button
-        android:id="@+id/addStudentBtn"
-        android:text="Add Student"
+    <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginBottom="20dp"/>
+        android:orientation="vertical"
+        android:padding="24dp">
 
-    <Button
-        android:id="@+id/markAttendanceBtn"
-        android:text="Mark Attendance"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginBottom="20dp"/>
+        <!-- Header Card -->
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="24dp"
+            android:elevation="4dp">
 
-    <Button
-        android:id="@+id/viewAttendanceBtn"
-        android:text="View Attendance Records"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"/>
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:padding="20dp"
+                android:background="#FFFFFF">
 
-</LinearLayout>
+                <TextView
+                    android:id="@+id/welcomeText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Welcome, User!"
+                    android:textSize="24sp"
+                    android:textStyle="bold"
+                    android:textColor="#1E293B"/>
+
+                <TextView
+                    android:id="@+id/userTypeText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Role: TEACHER"
+                    android:textSize="14sp"
+                    android:textColor="#64748B"
+                    android:layout_marginTop="4dp"/>
+
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Dashboard"
+            android:textSize="20sp"
+            android:textStyle="bold"
+            android:textColor="#1E293B"
+            android:layout_marginBottom="16dp"/>
+
+        <!-- Student Management Section -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Student Management"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#475569"
+            android:layout_marginBottom="12dp"/>
+
+        <Button
+            android:id="@+id/addStudentBtn"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:text="➕ Add New Student"
+            android:textSize="16sp"
+            android:backgroundTint="#3B82F6"
+            android:layout_marginBottom="12dp"/>
+
+        <Button
+            android:id="@+id/manageStudentsBtn"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:text="👥 Manage Students"
+            android:textSize="16sp"
+            android:backgroundTint="#8B5CF6"
+            android:layout_marginBottom="24dp"/>
+
+        <!-- Attendance Section -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Attendance"
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#475569"
+            android:layout_marginBottom="12dp"/>
+
+        <Button
+            android:id="@+id/markAttendanceBtn"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:text="✅ Mark Attendance"
+            android:textSize="16sp"
+            android:backgroundTint="#10B981"
+            android:layout_marginBottom="12dp"/>
+
+        <Button
+            android:id="@+id/viewAttendanceBtn"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:text="📋 View Attendance"
+            android:textSize="16sp"
+            android:backgroundTint="#F59E0B"
+            android:layout_marginBottom="12dp"/>
+
+        <Button
+            android:id="@+id/viewReportsBtn"
+            android:layout_width="match_parent"
+            android:layout_height="60dp"
+            android:text="📊 Attendance Reports"
+            android:textSize="16sp"
+            android:backgroundTint="#EC4899"
+            android:layout_marginBottom="32dp"/>
+
+        <!-- Logout Button -->
+        <Button
+            android:id="@+id/logoutBtn"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:text="🚪 Logout"
+            android:textSize="16sp"
+            android:backgroundTint="#EF4444"/>
+
+    </LinearLayout>
+
+</ScrollView>

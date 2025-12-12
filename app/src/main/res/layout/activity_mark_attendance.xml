@@ -3,60 +3,155 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:padding="16dp"
-    android:background="#F8FAFC">
+    android:background="#F5F7FA">
 
-    <TextView
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Mark Attendance"
-        android:textSize="22sp"
-        android:textStyle="bold"
-        android:gravity="center"
-        android:layout_marginBottom="15dp"/>
-
+    <!-- Header -->
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:layout_marginBottom="10dp"
-        android:background="#FFFFFF"
-        android:padding="10dp"
-        android:elevation="2dp">
+        android:orientation="vertical"
+        android:padding="20dp"
+        android:background="#10B981">
 
         <TextView
-            android:id="@+id/dateText"
-            android:layout_width="0dp"
-            android:layout_height="wrap_content"
-            android:layout_weight="1"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:text="Date: 2023-10-27"/>
-
-        <Button
-            android:id="@+id/btnPickDate"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:text="Change Date"/>
+            android:text="✅ Mark Attendance"
+            android:textSize="24sp"
+            android:textStyle="bold"
+            android:textColor="#FFFFFF"/>
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Select students and mark their attendance"
+            android:textSize="14sp"
+            android:textColor="#D1FAE5"
+            android:layout_marginTop="4dp"/>
+
     </LinearLayout>
 
+    <!-- Date & Subject Section -->
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="16dp"
+        android:background="#FFFFFF"
+        android:elevation="2dp">
+
+        <!-- Date Picker -->
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="12dp">
+
+            <TextView
+                android:id="@+id/dateText"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="Date: 2023-10-27"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="#1E293B"/>
+
+            <Button
+                android:id="@+id/btnPickDate"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Change"
+                android:backgroundTint="#10B981"/>
+
+        </LinearLayout>
+
+        <!-- Subject Input -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Subject *"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#475569"
+            android:layout_marginBottom="8dp"/>
+
+        <EditText
+            android:id="@+id/subjectInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="e.g., Mathematics, Science"
+            android:inputType="text"
+            android:padding="14dp"
+            android:background="@android:drawable/editbox_background"
+            android:layout_marginBottom="16dp"/>
+
+        <!-- Filters -->
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Filter Students"
+            android:textSize="14sp"
+            android:textStyle="bold"
+            android:textColor="#475569"
+            android:layout_marginBottom="8dp"/>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:weightSum="2">
+
+            <Spinner
+                android:id="@+id/departmentSpinner"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:padding="12dp"
+                android:background="@android:drawable/editbox_background"
+                android:layout_marginEnd="8dp"/>
+
+            <Spinner
+                android:id="@+id/yearSpinner"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:padding="12dp"
+                android:background="@android:drawable/editbox_background"
+                android:layout_marginStart="8dp"/>
+
+        </LinearLayout>
+
+        <Button
+            android:id="@+id/filterBtn"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Apply Filter"
+            android:backgroundTint="#6B7280"
+            android:layout_marginTop="12dp"/>
+
+    </LinearLayout>
+
+    <!-- Students List -->
     <androidx.recyclerview.widget.RecyclerView
         android:id="@+id/studentRecyclerView"
         android:layout_width="match_parent"
         android:layout_height="0dp"
         android:layout_weight="1"
-        android:background="#FFFFFF"
-        android:padding="5dp"
+        android:padding="12dp"
+        android:clipToPadding="false"
         android:scrollbars="vertical"/>
 
+    <!-- Save Button -->
     <Button
         android:id="@+id/saveAttendanceBtn"
         android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:text="Save Attendance"
-        android:layout_marginTop="10dp"
-        android:backgroundTint="#4CAF50"
-        android:textColor="#FFFFFF"/>
+        android:layout_height="60dp"
+        android:text="💾 Save Attendance"
+        android:textSize="16sp"
+        android:textStyle="bold"
+        android:backgroundTint="#10B981"
+        android:layout_margin="16dp"/>
 
 </LinearLayout>

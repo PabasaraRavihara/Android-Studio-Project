@@ -3,7 +3,7 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="8dp"
+    android:layout_marginBottom="12dp"
     app:cardCornerRadius="8dp"
     app:cardElevation="2dp">
 
@@ -11,9 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:gravity="center_vertical"
-        android:padding="16dp"
-        android:background="#FFFFFF">
+        android:padding="16dp">
 
         <LinearLayout
             android:layout_width="0dp"
@@ -22,41 +20,53 @@
             android:orientation="vertical">
 
             <TextView
-                android:id="@+id/itemName"
+                android:id="@+id/recordName"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Student Name"
-                android:textSize="16sp"
+                android:textSize="18sp"
                 android:textStyle="bold"
                 android:textColor="#1E293B"/>
 
             <TextView
-                android:id="@+id/itemReg"
+                android:id="@+id/recordReg"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="REG123"
+                android:text="REG001"
                 android:textSize="14sp"
                 android:textColor="#64748B"
                 android:layout_marginTop="4dp"/>
 
             <TextView
-                android:id="@+id/itemDept"
+                android:id="@+id/recordDept"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="CS - 1st Year"
+                android:text="Computer Science - 1st Year"
                 android:textSize="12sp"
                 android:textColor="#94A3B8"
-                android:layout_marginTop="2dp"/>
+                android:layout_marginTop="4dp"/>
+
+            <TextView
+                android:id="@+id/recordSubject"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:text="Subject"
+                android:textSize="12sp"
+                android:textColor="#3B82F6"
+                android:layout_marginTop="4dp"/>
 
         </LinearLayout>
 
-        <CheckBox
-            android:id="@+id/itemPresent"
+        <TextView
+            android:id="@+id/recordStatus"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:text="Present"
-            android:textSize="14sp"
-            android:buttonTint="#10B981"/>
+            android:textSize="16sp"
+            android:textStyle="bold"
+            android:textColor="#10B981"
+            android:padding="8dp"
+            android:layout_gravity="center_vertical"/>
 
     </LinearLayout>
 
