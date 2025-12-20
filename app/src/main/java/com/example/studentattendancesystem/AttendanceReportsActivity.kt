@@ -15,13 +15,14 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.cardview.widget.CardView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
+import com.google.firebase.firestore.FirebaseFirestore
 import java.io.File
 import java.io.FileOutputStream
 import java.io.IOException
 
 class AttendanceReportsActivity : AppCompatActivity() {
 
-    private lateinit var db: SQLiteHelper
+    private lateinit var db: FirebaseFirestore
     private lateinit var studentSpinner: Spinner
     private lateinit var generateBtn: Button
     private lateinit var btnSavePdf: Button
@@ -39,11 +40,15 @@ class AttendanceReportsActivity : AppCompatActivity() {
     private var students = ArrayList<Student>()
     private var currentStudent: Student? = null
 
+    // Helper class to store calculated stats
+    data class AttendanceStats(val total: Int, val present: Int, val absent: Int, val percentage: Double)
+    private var currentStats: AttendanceStats? = null
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_attendance_reports)
 
-        db = SQLiteHelper(this)
+        db = FirebaseFirestore.getInstance()
 
         studentSpinner = findViewById(R.id.studentSpinner)
         generateBtn = findViewById(R.id.generateReportBtn)
@@ -63,38 +68,31 @@ class AttendanceReportsActivity : AppCompatActivity() {
         val specificStudentReg = intent.getStringExtra("STUDENT_REG")
 
         if (specificStudentReg != null) {
-            // STUDENT MODE: Hide admin controls
+            // STUDENT MODE: Auto-load based on RegNo
             studentSpinner.visibility = View.GONE
             generateBtn.visibility = View.GONE
             lblSelectStudent.visibility = View.GONE
-
-            val student = db.getStudentByReg(specificStudentReg)
-            if (student != null) {
-                currentStudent = student
-                displayReportForStudent(student)
-            } else {
-                Toast.makeText(this, "Student profile not found!", Toast.LENGTH_SHORT).show()
-            }
+            loadStudentByRegNo(specificStudentReg)
         } else {
-            // ADMIN/TEACHER MODE: Show spinner
-            loadStudents()
+            // TEACHER MODE: Load list
+            loadStudentsList()
+
             generateBtn.setOnClickListener {
                 val selectedIndex = studentSpinner.selectedItemPosition
-                if (selectedIndex > 0) {
+                if (selectedIndex > 0 && students.isNotEmpty()) {
                     val student = students[selectedIndex - 1]
                     currentStudent = student
-                    displayReportForStudent(student)
+                    calculateAttendanceStats(student)
                 } else {
                     Toast.makeText(this, "Please select a student", Toast.LENGTH_SHORT).show()
                 }
             }
         }
 
-        // PDF Button Click Listener
         btnSavePdf.setOnClickListener {
-            if (currentStudent != null) {
+            if (currentStudent != null && currentStats != null) {
                 if (checkPermission()) {
-                    generatePDF(currentStudent!!)
+                    generatePDF(currentStudent!!, currentStats!!)
                 } else {
                     requestPermission()
                 }
@@ -102,25 +100,94 @@ class AttendanceReportsActivity : AppCompatActivity() {
         }
     }
 
-    private fun loadStudents() {
-        students = db.getAllStudents()
-        val studentNames = mutableListOf("Select Student")
-        studentNames.addAll(students.map { "${it.name} (${it.studentCode})" })
+    private fun loadStudentsList() {
+        db.collection("students").get()
+            .addOnSuccessListener { result ->
+                students.clear()
+                val studentNames = mutableListOf("Select Student")
 
-        val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, studentNames)
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        studentSpinner.adapter = adapter
+                for (document in result) {
+                    val s = Student(
+                        id = document.id,
+                        studentName = document.getString("studentName"),
+                        studentRegNo = document.getString("studentRegNo"),
+                        department = document.getString("department"),
+                        academicYear = document.getString("academicYear"),
+                        email = document.getString("email"),
+                        phone = document.getString("phone")
+                    )
+                    students.add(s)
+                    studentNames.add("${s.studentName} (${s.studentRegNo})")
+                }
+
+                val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, studentNames)
+                adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
+                studentSpinner.adapter = adapter
+            }
+            .addOnFailureListener {
+                Toast.makeText(this, "Failed to load students", Toast.LENGTH_SHORT).show()
+            }
     }
 
-    private fun displayReportForStudent(student: Student) {
-        val stats = db.getAttendanceStats(student.id)
+    private fun loadStudentByRegNo(regNo: String) {
+        db.collection("students")
+            .whereEqualTo("studentRegNo", regNo)
+            .get()
+            .addOnSuccessListener { documents ->
+                if (!documents.isEmpty) {
+                    val document = documents.documents[0]
+                    val s = Student(
+                        id = document.id,
+                        studentName = document.getString("studentName"),
+                        studentRegNo = document.getString("studentRegNo"),
+                        department = document.getString("department"),
+                        academicYear = document.getString("academicYear"),
+                        email = document.getString("email"),
+                        phone = document.getString("phone")
+                    )
+                    currentStudent = s
+                    calculateAttendanceStats(s)
+                } else {
+                    Toast.makeText(this, "Student not found!", Toast.LENGTH_SHORT).show()
+                }
+            }
+    }
 
+    private fun calculateAttendanceStats(student: Student) {
+        // Query Attendance Collection in Firebase
+        db.collection("attendance")
+            .whereEqualTo("studentRegNo", student.studentRegNo)
+            .get()
+            .addOnSuccessListener { documents ->
+                var present = 0
+                val total = documents.size()
+
+                for (doc in documents) {
+                    if (doc.getString("status") == "Present") {
+                        present++
+                    }
+                }
+
+                val absent = total - present
+                val percentage = if (total > 0) (present.toDouble() / total * 100) else 0.0
+
+                val stats = AttendanceStats(total, present, absent, percentage)
+                currentStats = stats
+
+                displayReportUI(student, stats)
+            }
+            .addOnFailureListener {
+                Toast.makeText(this, "Failed to fetch attendance records", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    private fun displayReportUI(student: Student, stats: AttendanceStats) {
         reportLayout.visibility = View.VISIBLE
         btnSavePdf.visibility = View.VISIBLE
 
-        studentNameTxt.text = student.name
-        regNoTxt.text = "Reg No: ${student.studentCode}"
-        deptYearTxt.text = "${student.department} - ${student.year}"
+        studentNameTxt.text = student.studentName
+        regNoTxt.text = "Reg No: ${student.studentRegNo}"
+        deptYearTxt.text = "${student.department} - ${student.academicYear}"
 
         totalClassesTxt.text = stats.total.toString()
         presentTxt.text = stats.present.toString()
@@ -146,11 +213,8 @@ class AttendanceReportsActivity : AppCompatActivity() {
         statusTxt.text = status
     }
 
-    // ==================== PDF GENERATION LOGIC ====================
-    private fun generatePDF(student: Student) {
-        val stats = db.getAttendanceStats(student.id)
-
-        // Create Document (A4 Size)
+    // ==================== PDF GENERATION ====================
+    private fun generatePDF(student: Student, stats: AttendanceStats) {
         val pdfDocument = PdfDocument()
         val pageInfo = PdfDocument.PageInfo.Builder(595, 842, 1).create()
         val page = pdfDocument.startPage(pageInfo)
@@ -158,33 +222,32 @@ class AttendanceReportsActivity : AppCompatActivity() {
         val canvas: Canvas = page.canvas
         val paint = Paint()
 
-        // 1. Title
-        paint.color = Color.parseColor("#3B82F6") // Blue
+        // Title
+        paint.color = Color.parseColor("#3B82F6")
         paint.textSize = 24f
         paint.isFakeBoldText = true
         canvas.drawText("Student Attendance Report", 160f, 60f, paint)
 
-        // 2. Student Details
+        // Details
         paint.color = Color.BLACK
         paint.textSize = 16f
         paint.isFakeBoldText = false
 
         var y = 120f
-        canvas.drawText("Name: ${student.name}", 50f, y, paint)
+        canvas.drawText("Name: ${student.studentName}", 50f, y, paint)
         y += 30f
-        canvas.drawText("Reg No: ${student.studentCode}", 50f, y, paint)
+        canvas.drawText("Reg No: ${student.studentRegNo}", 50f, y, paint)
         y += 30f
         canvas.drawText("Department: ${student.department}", 50f, y, paint)
         y += 30f
-        canvas.drawText("Year: ${student.year}", 50f, y, paint)
+        canvas.drawText("Year: ${student.academicYear}", 50f, y, paint)
 
-        // Line Separator
         y += 20f
         paint.color = Color.LTGRAY
         paint.strokeWidth = 2f
         canvas.drawLine(50f, y, 545f, y, paint)
 
-        // 3. Statistics Section
+        // Stats
         y += 50f
         paint.color = Color.BLACK
         paint.textSize = 18f
@@ -195,57 +258,34 @@ class AttendanceReportsActivity : AppCompatActivity() {
         paint.textSize = 16f
         paint.isFakeBoldText = false
 
-        canvas.drawText("Total Classes:", 50f, y, paint)
-        canvas.drawText(stats.total.toString(), 300f, y, paint)
-
+        canvas.drawText("Total Classes: ${stats.total}", 50f, y, paint)
         y += 30f
-        canvas.drawText("Present:", 50f, y, paint)
-        paint.color = Color.parseColor("#10B981") // Green
-        canvas.drawText(stats.present.toString(), 300f, y, paint)
-
+        canvas.drawText("Present: ${stats.present}", 50f, y, paint)
         y += 30f
-        paint.color = Color.BLACK
-        canvas.drawText("Absent:", 50f, y, paint)
-        paint.color = Color.parseColor("#EF4444") // Red
-        canvas.drawText(stats.absent.toString(), 300f, y, paint)
+        canvas.drawText("Absent: ${stats.absent}", 50f, y, paint)
 
         y += 40f
-        paint.color = Color.BLACK
         paint.textSize = 20f
         paint.isFakeBoldText = true
-        canvas.drawText("Overall Percentage:", 50f, y, paint)
-
-        val percentStr = "%.2f%%".format(stats.percentage)
-        canvas.drawText(percentStr, 300f, y, paint)
-
-        // Footer (Date Generated)
-        y += 100f
-        paint.textSize = 12f
-        paint.color = Color.GRAY
-        paint.isFakeBoldText = false
-        canvas.drawText("Generated by Student Attendance System", 50f, y, paint)
+        canvas.drawText("Overall Percentage: %.2f%%".format(stats.percentage), 50f, y, paint)
 
         pdfDocument.finishPage(page)
 
-        // Save to Downloads folder
-        val fileName = "Attendance_${student.studentCode?.replace("/", "_")}.pdf"
+        val fileName = "Attendance_${student.studentRegNo?.replace("/", "_")}.pdf"
         val file = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), fileName)
 
         try {
             pdfDocument.writeTo(FileOutputStream(file))
-            Toast.makeText(this, "PDF Saved to Downloads: $fileName", Toast.LENGTH_LONG).show()
+            Toast.makeText(this, "PDF Saved: $fileName", Toast.LENGTH_LONG).show()
         } catch (e: IOException) {
             e.printStackTrace()
-            Toast.makeText(this, "Error saving PDF: ${e.message}", Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
         }
-
         pdfDocument.close()
     }
 
     private fun checkPermission(): Boolean {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) {
-            return true // Android 10+ doesn't need permission for Downloads
-        }
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q) return true
         val result = ContextCompat.checkSelfPermission(applicationContext, Manifest.permission.WRITE_EXTERNAL_STORAGE)
         return result == PackageManager.PERMISSION_GRANTED
     }
@@ -254,15 +294,12 @@ class AttendanceReportsActivity : AppCompatActivity() {
         ActivityCompat.requestPermissions(this, arrayOf(Manifest.permission.WRITE_EXTERNAL_STORAGE), 100)
     }
 
-    // Handle permission result
     override fun onRequestPermissionsResult(requestCode: Int, permissions: Array<out String>, grantResults: IntArray) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
-        if (requestCode == 100) {
-            if (grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-                if (currentStudent != null) generatePDF(currentStudent!!)
-            } else {
-                Toast.makeText(this, "Permission Denied! Cannot save PDF.", Toast.LENGTH_SHORT).show()
-            }
+        if (requestCode == 100 && grantResults.isNotEmpty() && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
+            if (currentStudent != null && currentStats != null) generatePDF(currentStudent!!, currentStats!!)
+        } else {
+            Toast.makeText(this, "Permission Denied!", Toast.LENGTH_SHORT).show()
         }
     }
 }

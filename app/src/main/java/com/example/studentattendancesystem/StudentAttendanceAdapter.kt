@@ -11,7 +11,8 @@ class StudentAttendanceAdapter(
     private val items: List<Student>
 ) : RecyclerView.Adapter<StudentAttendanceAdapter.VH>() {
 
-    private val stateMap = HashMap<Int, Boolean>()
+    // Changed Int to String because Firebase IDs are Strings
+    private val stateMap = HashMap<String, Boolean>()
 
     init {
         for (s in items) stateMap[s.id] = false
@@ -32,9 +33,11 @@ class StudentAttendanceAdapter(
 
     override fun onBindViewHolder(holder: VH, position: Int) {
         val s = items[position]
-        holder.name.text = s.name
-        holder.reg.text = s.studentCode
-        holder.dept.text = "${s.department} - ${s.year}"
+
+        // Updated property names
+        holder.name.text = s.studentName
+        holder.reg.text = s.studentRegNo
+        holder.dept.text = "${s.department} - ${s.academicYear}"
 
         // Fix recycling issue
         holder.check.setOnCheckedChangeListener(null)

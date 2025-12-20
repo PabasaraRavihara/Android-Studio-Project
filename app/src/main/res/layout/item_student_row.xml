@@ -3,17 +3,16 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="8dp"
+    android:layout_margin="8dp"
     app:cardCornerRadius="8dp"
-    app:cardElevation="2dp">
+    app:cardElevation="4dp">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:orientation="horizontal"
-        android:gravity="center_vertical"
         android:padding="16dp"
-        android:background="?android:attr/selectableItemBackground">
+        android:gravity="center_vertical">
 
         <LinearLayout
             android:layout_width="0dp"
@@ -26,49 +25,46 @@
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:text="Student Name"
-                android:textStyle="bold"
                 android:textSize="18sp"
-                android:textColor="#1E293B"/>
+                android:textStyle="bold"
+                android:textColor="#000000" />
 
             <TextView
                 android:id="@+id/tvReg"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="REG001"
+                android:text="Registration No"
                 android:textSize="14sp"
-                android:textColor="#64748B"
-                android:layout_marginTop="4dp"/>
+                android:textColor="#555555" />
 
             <TextView
                 android:id="@+id/tvDept"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="Computer Science - 1st Year"
+                android:text="Department"
                 android:textSize="12sp"
-                android:textColor="#94A3B8"
+                android:textColor="#009688"
                 android:layout_marginTop="4dp"/>
-
         </LinearLayout>
 
         <ImageButton
             android:id="@+id/btnEdit"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:src="@android:drawable/ic_menu_edit"
-            android:background="?android:attr/selectableItemBackgroundBorderless"
+            android:background="?attr/selectableItemBackgroundBorderless"
             android:contentDescription="Edit"
-            app:tint="#3B82F6" />
+            app:tint="#2196F3" />
 
         <ImageButton
             android:id="@+id/btnDelete"
-            android:layout_width="48dp"
-            android:layout_height="48dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:src="@android:drawable/ic_menu_delete"
-            android:background="?android:attr/selectableItemBackgroundBorderless"
-            android:contentDescription="Delete"
+            android:background="?attr/selectableItemBackgroundBorderless"
             android:layout_marginStart="8dp"
-            app:tint="#EF4444" />
+            android:contentDescription="Delete"
+            app:tint="#F44336" />
 
     </LinearLayout>
-
 </androidx.cardview.widget.CardView>

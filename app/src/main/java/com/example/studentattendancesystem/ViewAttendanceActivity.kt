@@ -2,16 +2,20 @@ package com.example.studentattendancesystem
 
 import android.app.DatePickerDialog
 import android.os.Bundle
+import android.view.LayoutInflater
+import android.view.View
+import android.view.ViewGroup
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import com.google.firebase.firestore.FirebaseFirestore
 import java.text.SimpleDateFormat
 import java.util.*
 
 class ViewAttendanceActivity : AppCompatActivity() {
 
-    private lateinit var db: SQLiteHelper
+    private lateinit var db: FirebaseFirestore
     private lateinit var recyclerView: RecyclerView
     private lateinit var adapter: AttendanceRecordAdapter
     private lateinit var dateTxt: TextView
@@ -26,7 +30,8 @@ class ViewAttendanceActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_view_attendance)
 
-        db = SQLiteHelper(this)
+        // 1. Firebase පණගන්වා ගැනීම
+        db = FirebaseFirestore.getInstance()
 
         recyclerView = findViewById(R.id.attendanceRecycler)
         dateTxt = findViewById(R.id.dateTextView)
@@ -42,14 +47,14 @@ class ViewAttendanceActivity : AppCompatActivity() {
         dateTxt.text = selectedDate
 
         btnPickDate.setOnClickListener { pickDate() }
-        btnLoad.setOnClickListener { loadAttendance() }
+        btnLoad.setOnClickListener { loadAttendanceFromFirebase() }
 
         // Load initial data
-        loadAttendance()
+        loadAttendanceFromFirebase()
     }
 
     private fun setupSubjectSpinner() {
-        val subjects = arrayOf("All Subjects", "Mathematics", "Science", "English", "History", "Programming")
+        val subjects = arrayOf("All Subjects", "Mathematics", "Science", "English", "History", "Programming", "Manual Mark")
         val adapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, subjects)
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
         subjectSpinner.adapter = adapter
@@ -65,33 +70,61 @@ class ViewAttendanceActivity : AppCompatActivity() {
         dp.show()
     }
 
-    private fun loadAttendance() {
+    private fun loadAttendanceFromFirebase() {
         val selectedSubject = subjectSpinner.selectedItem.toString()
-        val subject = if (selectedSubject == "All Subjects") null else selectedSubject
 
-        val records = db.getAttendanceByDate(selectedDate, subject)
+        // Query එක හදනවා
+        var query = db.collection("attendance")
+            .whereEqualTo("date", selectedDate)
 
-        if (records.isEmpty()) {
-            recyclerView.visibility = android.view.View.GONE
-            emptyView.visibility = android.view.View.VISIBLE
-            emptyView.text = "No attendance records found for $selectedDate"
-        } else {
-            recyclerView.visibility = android.view.View.VISIBLE
-            emptyView.visibility = android.view.View.GONE
-
-            adapter = AttendanceRecordAdapter(records)
-            recyclerView.adapter = adapter
-
-            // Show summary
-            val presentCount = records.count { it.status == "Present" }
-            val absentCount = records.count { it.status == "Absent" }
-
-            Toast.makeText(
-                this,
-                "Total: ${records.size} | Present: $presentCount | Absent: $absentCount",
-                Toast.LENGTH_LONG
-            ).show()
+        // Subject එකක් තෝරලා නම් ඒකෙනුත් Filter කරනවා
+        if (selectedSubject != "All Subjects") {
+            query = query.whereEqualTo("subject", selectedSubject)
         }
+
+        Toast.makeText(this, "Loading records...", Toast.LENGTH_SHORT).show()
+
+        query.get()
+            .addOnSuccessListener { result ->
+                val records = ArrayList<AttendanceRecord>()
+
+                for (document in result) {
+                    // Firebase Data -> AttendanceRecord Object
+                    val record = AttendanceRecord(
+                        id = 0, // Firebase වලට ID එක String නිසා මෙතන 0 දාමු (Display එකට අවුලක් නෑ)
+                        studentName = document.getString("studentName"),
+                        studentCode = document.getString("studentRegNo"),
+                        date = document.getString("date"),
+                        status = document.getString("status"),
+                        subject = document.getString("subject"),
+                        // මේවා Attendance Table එකේ නැති නිසා හිස්ව තියමු හෝ Default දාමු
+                        department = "N/A",
+                        year = "",
+                        markedBy = "Teacher"
+                    )
+                    records.add(record)
+                }
+
+                if (records.isEmpty()) {
+                    recyclerView.visibility = View.GONE
+                    emptyView.visibility = View.VISIBLE
+                    emptyView.text = "No attendance records found for $selectedDate"
+                } else {
+                    recyclerView.visibility = View.VISIBLE
+                    emptyView.visibility = View.GONE
+
+                    adapter = AttendanceRecordAdapter(records)
+                    recyclerView.adapter = adapter
+
+                    // Summary පෙන්වීම
+                    val presentCount = records.count { it.status == "Present" }
+                    val absentCount = records.count { it.status == "Absent" }
+                    Toast.makeText(this, "Present: $presentCount | Absent: $absentCount", Toast.LENGTH_SHORT).show()
+                }
+            }
+            .addOnFailureListener {
+                Toast.makeText(this, "Error loading data!", Toast.LENGTH_SHORT).show()
+            }
     }
 }
 
@@ -100,7 +133,7 @@ class AttendanceRecordAdapter(
     private val records: List<AttendanceRecord>
 ) : RecyclerView.Adapter<AttendanceRecordAdapter.ViewHolder>() {
 
-    inner class ViewHolder(view: android.view.View) : RecyclerView.ViewHolder(view) {
+    inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
         val nameText: TextView = view.findViewById(R.id.recordName)
         val regText: TextView = view.findViewById(R.id.recordReg)
         val deptText: TextView = view.findViewById(R.id.recordDept)
@@ -108,8 +141,8 @@ class AttendanceRecordAdapter(
         val subjectText: TextView = view.findViewById(R.id.recordSubject)
     }
 
-    override fun onCreateViewHolder(parent: android.view.ViewGroup, viewType: Int): ViewHolder {
-        val view = android.view.LayoutInflater.from(parent.context)
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+        val view = LayoutInflater.from(parent.context)
             .inflate(R.layout.item_attendance_record, parent, false)
         return ViewHolder(view)
     }
@@ -119,7 +152,10 @@ class AttendanceRecordAdapter(
 
         holder.nameText.text = record.studentName
         holder.regText.text = record.studentCode
-        holder.deptText.text = "${record.department ?: ""} - ${record.year ?: ""}"
+
+        // Department එක නැති නිසා නිකන් ඉරක් ගහමු
+        holder.deptText.text = "${record.date}"
+
         holder.statusText.text = record.status
 
         // Color code status

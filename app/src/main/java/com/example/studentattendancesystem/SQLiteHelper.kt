@@ -12,36 +12,17 @@ class SQLiteHelper(context: Context) :
         private const val DATABASE_NAME = "attendance.db"
         private const val DATABASE_VERSION = 2
 
-        // Users Table
+        // Users Table (Login/Register සඳහා මෙය තබා ගනිමු)
         private const val TABLE_USERS = "users"
         private const val COL_USER_ID = "id"
         private const val COL_USERNAME = "username"
         private const val COL_PASSWORD = "password"
         private const val COL_USER_TYPE = "user_type"
         private const val COL_FULL_NAME = "full_name"
-
-        // Students Table
-        private const val TABLE_STUDENTS = "students"
-        private const val COL_STUDENT_ID = "id"
-        private const val COL_STUDENT_REG = "student_id"
-        private const val COL_NAME = "name"
-        private const val COL_DEPARTMENT = "department"
-        private const val COL_YEAR = "year"
-        private const val COL_EMAIL = "email"
-        private const val COL_PHONE = "phone"
-
-        // Attendance Table
-        private const val TABLE_ATTENDANCE = "attendance"
-        private const val COL_ATT_ID = "id"
-        private const val COL_ATT_STUDENT_FK = "student_id"
-        private const val COL_DATE = "date"
-        private const val COL_STATUS = "status"
-        private const val COL_SUBJECT = "subject"
-        private const val COL_MARKED_BY = "marked_by"
-        private const val COL_TIMESTAMP = "timestamp"
     }
 
     override fun onCreate(db: SQLiteDatabase) {
+        // Users Table එක පමණක් සෑදීම
         val createUsers = """
             CREATE TABLE $TABLE_USERS (
               $COL_USER_ID INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -52,36 +33,9 @@ class SQLiteHelper(context: Context) :
             );
         """.trimIndent()
 
-        val createStudents = """
-            CREATE TABLE $TABLE_STUDENTS (
-              $COL_STUDENT_ID INTEGER PRIMARY KEY AUTOINCREMENT,
-              $COL_STUDENT_REG TEXT UNIQUE NOT NULL,
-              $COL_NAME TEXT NOT NULL,
-              $COL_DEPARTMENT TEXT,
-              $COL_YEAR TEXT,
-              $COL_EMAIL TEXT,
-              $COL_PHONE TEXT
-            );
-        """.trimIndent()
-
-        val createAttendance = """
-            CREATE TABLE $TABLE_ATTENDANCE (
-              $COL_ATT_ID INTEGER PRIMARY KEY AUTOINCREMENT,
-              $COL_ATT_STUDENT_FK INTEGER NOT NULL,
-              $COL_DATE TEXT NOT NULL,
-              $COL_STATUS TEXT NOT NULL,
-              $COL_SUBJECT TEXT,
-              $COL_MARKED_BY TEXT,
-              $COL_TIMESTAMP DATETIME DEFAULT CURRENT_TIMESTAMP,
-              FOREIGN KEY($COL_ATT_STUDENT_FK) REFERENCES $TABLE_STUDENTS($COL_STUDENT_ID) ON DELETE CASCADE
-            );
-        """.trimIndent()
-
         db.execSQL(createUsers)
-        db.execSQL(createStudents)
-        db.execSQL(createAttendance)
 
-        // Insert default admin user
+        // Default Admin කෙනෙක්ව ඇතුළත් කිරීම
         val cv = ContentValues().apply {
             put(COL_USERNAME, "admin")
             put(COL_PASSWORD, "admin123")
@@ -92,13 +46,11 @@ class SQLiteHelper(context: Context) :
     }
 
     override fun onUpgrade(db: SQLiteDatabase, oldVersion: Int, newVersion: Int) {
-        db.execSQL("DROP TABLE IF EXISTS $TABLE_ATTENDANCE")
-        db.execSQL("DROP TABLE IF EXISTS $TABLE_STUDENTS")
         db.execSQL("DROP TABLE IF EXISTS $TABLE_USERS")
         onCreate(db)
     }
 
-    // ==================== USER FUNCTIONS ====================
+    // ==================== USER FUNCTIONS (LOGIN/REGISTER) ====================
 
     fun loginUser(username: String, password: String): User? {
         val db = readableDatabase
@@ -143,203 +95,11 @@ class SQLiteHelper(context: Context) :
         return exists
     }
 
-    // ==================== STUDENT FUNCTIONS ====================
-
-    fun addStudent(studentId: String, name: String, department: String, year: String, email: String? = null, phone: String? = null): Long {
-        val db = writableDatabase
-        val cv = ContentValues().apply {
-            put(COL_STUDENT_REG, studentId)
-            put(COL_NAME, name)
-            put(COL_DEPARTMENT, department)
-            put(COL_YEAR, year)
-            put(COL_EMAIL, email)
-            put(COL_PHONE, phone)
-        }
-        return db.insert(TABLE_STUDENTS, null, cv)
-    }
-
-    fun getAllStudents(): ArrayList<Student> {
-        val list = ArrayList<Student>()
-        val db = readableDatabase
-        val cursor = db.rawQuery("SELECT * FROM $TABLE_STUDENTS ORDER BY $COL_NAME", null)
-
-        if (cursor.moveToFirst()) {
-            do {
-                val s = Student(
-                    id = cursor.getInt(cursor.getColumnIndexOrThrow(COL_STUDENT_ID)),
-                    studentCode = cursor.getString(cursor.getColumnIndexOrThrow(COL_STUDENT_REG)),
-                    name = cursor.getString(cursor.getColumnIndexOrThrow(COL_NAME)),
-                    department = cursor.getString(cursor.getColumnIndexOrThrow(COL_DEPARTMENT)),
-                    year = cursor.getString(cursor.getColumnIndexOrThrow(COL_YEAR)),
-                    email = cursor.getString(cursor.getColumnIndexOrThrow(COL_EMAIL)),
-                    phone = cursor.getString(cursor.getColumnIndexOrThrow(COL_PHONE))
-                )
-                list.add(s)
-            } while (cursor.moveToNext())
-        }
-        cursor.close()
-        return list
-    }
-
-    // NEW FUNCTION: Get Student by Registration Number (Username)
-    fun getStudentByReg(regNo: String): Student? {
-        val db = readableDatabase
-        val cursor = db.rawQuery(
-            "SELECT * FROM $TABLE_STUDENTS WHERE $COL_STUDENT_REG=?",
-            arrayOf(regNo)
-        )
-        var student: Student? = null
-        if (cursor.moveToFirst()) {
-            student = Student(
-                id = cursor.getInt(cursor.getColumnIndexOrThrow(COL_STUDENT_ID)),
-                studentCode = cursor.getString(cursor.getColumnIndexOrThrow(COL_STUDENT_REG)),
-                name = cursor.getString(cursor.getColumnIndexOrThrow(COL_NAME)),
-                department = cursor.getString(cursor.getColumnIndexOrThrow(COL_DEPARTMENT)),
-                year = cursor.getString(cursor.getColumnIndexOrThrow(COL_YEAR)),
-                email = cursor.getString(cursor.getColumnIndexOrThrow(COL_EMAIL)),
-                phone = cursor.getString(cursor.getColumnIndexOrThrow(COL_PHONE))
-            )
-        }
-        cursor.close()
-        return student
-    }
-
-    fun updateStudent(id: Int, studentCode: String, name: String, department: String, year: String, email: String? = null, phone: String? = null): Int {
-        val db = writableDatabase
-        val cv = ContentValues().apply {
-            put(COL_STUDENT_REG, studentCode)
-            put(COL_NAME, name)
-            put(COL_DEPARTMENT, department)
-            put(COL_YEAR, year)
-            put(COL_EMAIL, email)
-            put(COL_PHONE, phone)
-        }
-        return db.update(TABLE_STUDENTS, cv, "$COL_STUDENT_ID=?", arrayOf(id.toString()))
-    }
-
-    fun deleteStudent(id: Int): Int {
-        val db = writableDatabase
-        return db.delete(TABLE_STUDENTS, "$COL_STUDENT_ID=?", arrayOf(id.toString()))
-    }
-
+    // Student Validation for Registration (Firebase Check Logic එක Register Activity එකේ වෙනම හදන්න වෙයි,
+    // නැත්නම් දැනට ඕනම කෙනෙක්ට Register වෙන්න පුළුවන් විදියට තියමු).
     fun studentRegExists(regNo: String): Boolean {
-        val db = readableDatabase
-        val cursor = db.rawQuery(
-            "SELECT 1 FROM $TABLE_STUDENTS WHERE $COL_STUDENT_REG=?",
-            arrayOf(regNo)
-        )
-        val exists = cursor.count > 0
-        cursor.close()
-        return exists
-    }
-
-    fun getAllDepartments(): List<String> {
-        val list = ArrayList<String>()
-        val db = readableDatabase
-        val cursor = db.rawQuery("SELECT DISTINCT $COL_DEPARTMENT FROM $TABLE_STUDENTS WHERE $COL_DEPARTMENT IS NOT NULL ORDER BY $COL_DEPARTMENT", null)
-        if (cursor.moveToFirst()) {
-            do {
-                list.add(cursor.getString(0))
-            } while (cursor.moveToNext())
-        }
-        cursor.close()
-        return list
-    }
-
-    // ==================== ATTENDANCE FUNCTIONS ====================
-
-    fun markAttendance(studentId: Int, date: String, status: String, subject: String?, markedBy: String? = null): Long {
-        val db = writableDatabase
-
-        if (subject != null) {
-            db.delete(TABLE_ATTENDANCE, "$COL_ATT_STUDENT_FK=? AND $COL_DATE=? AND $COL_SUBJECT=?", arrayOf(studentId.toString(), date, subject))
-        } else {
-            db.delete(TABLE_ATTENDANCE, "$COL_ATT_STUDENT_FK=? AND $COL_DATE=? AND ($COL_SUBJECT IS NULL OR $COL_SUBJECT='')", arrayOf(studentId.toString(), date))
-        }
-
-        val cv = ContentValues().apply {
-            put(COL_ATT_STUDENT_FK, studentId)
-            put(COL_DATE, date)
-            put(COL_STATUS, status)
-            put(COL_SUBJECT, subject)
-            put(COL_MARKED_BY, markedBy)
-        }
-        return db.insert(TABLE_ATTENDANCE, null, cv)
-    }
-
-    fun getAttendanceByDate(date: String, subject: String? = null): ArrayList<AttendanceRecord> {
-        val list = ArrayList<AttendanceRecord>()
-        val db = readableDatabase
-
-        val query = if (subject != null) {
-            """
-            SELECT a.$COL_ATT_ID, s.$COL_NAME, s.$COL_STUDENT_REG, s.$COL_DEPARTMENT, s.$COL_YEAR,
-                   a.$COL_DATE, a.$COL_STATUS, a.$COL_SUBJECT, a.$COL_MARKED_BY
-            FROM $TABLE_ATTENDANCE a
-            JOIN $TABLE_STUDENTS s ON a.$COL_ATT_STUDENT_FK = s.$COL_STUDENT_ID
-            WHERE a.$COL_DATE = ? AND a.$COL_SUBJECT = ?
-            ORDER BY s.$COL_NAME
-            """.trimIndent()
-        } else {
-            """
-            SELECT a.$COL_ATT_ID, s.$COL_NAME, s.$COL_STUDENT_REG, s.$COL_DEPARTMENT, s.$COL_YEAR,
-                   a.$COL_DATE, a.$COL_STATUS, a.$COL_SUBJECT, a.$COL_MARKED_BY
-            FROM $TABLE_ATTENDANCE a
-            JOIN $TABLE_STUDENTS s ON a.$COL_ATT_STUDENT_FK = s.$COL_STUDENT_ID
-            WHERE a.$COL_DATE = ?
-            ORDER BY s.$COL_NAME
-            """.trimIndent()
-        }
-
-        val cursor = if (subject != null) {
-            db.rawQuery(query, arrayOf(date, subject))
-        } else {
-            db.rawQuery(query, arrayOf(date))
-        }
-
-        if (cursor.moveToFirst()) {
-            do {
-                val record = AttendanceRecord(
-                    id = cursor.getInt(0),
-                    studentName = cursor.getString(1),
-                    studentCode = cursor.getString(2),
-                    department = cursor.getString(3),
-                    year = cursor.getString(4),
-                    date = cursor.getString(5),
-                    status = cursor.getString(6),
-                    subject = cursor.getString(7),
-                    markedBy = cursor.getString(8)
-                )
-                list.add(record)
-            } while (cursor.moveToNext())
-        }
-        cursor.close()
-        return list
-    }
-
-    fun getAttendanceStats(studentId: Int): AttendanceStats {
-        val db = readableDatabase
-        val cursor = db.rawQuery(
-            """
-            SELECT 
-                COUNT(*) as total,
-                SUM(CASE WHEN $COL_STATUS='Present' THEN 1 ELSE 0 END) as present,
-                SUM(CASE WHEN $COL_STATUS='Absent' THEN 1 ELSE 0 END) as absent
-            FROM $TABLE_ATTENDANCE
-            WHERE $COL_ATT_STUDENT_FK = ?
-            """.trimIndent(),
-            arrayOf(studentId.toString())
-        )
-
-        var stats = AttendanceStats(0, 0, 0, 0.0)
-        if (cursor.moveToFirst()) {
-            val total = cursor.getInt(0)
-            val present = cursor.getInt(1)
-            val absent = cursor.getInt(2)
-            val percentage = if (total > 0) (present.toDouble() / total * 100) else 0.0
-            stats = AttendanceStats(total, present, absent, percentage)
-        }
-        cursor.close()
-        return stats
+        // දැන් අපි Students ලව Firebase එකේ manage කරන නිසා,
+        // මෙතනින් TRUE යවමු ලේසියට. (පස්සේ ඕන නම් Firebase check එකක් දාන්න පුළුවන්)
+        return true
     }
 }

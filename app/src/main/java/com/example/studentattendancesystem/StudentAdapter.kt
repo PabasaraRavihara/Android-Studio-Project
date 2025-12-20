@@ -28,25 +28,19 @@ class StudentAdapter(
 
     override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): VH {
         val v = LayoutInflater.from(parent.context)
-            .inflate(R.layout.item_student_row, parent, false)
+            .inflate(R.layout.item_student_row, parent, false) // Note: using student_item.xml we created earlier
         return VH(v)
     }
 
     override fun onBindViewHolder(holder: VH, position: Int) {
         val s = items[position]
-        holder.name.text = s.name
-        holder.reg.text = s.studentCode
-        holder.dept.text = "${s.department} - ${s.year}"
+        holder.name.text = s.studentName
+        holder.reg.text = s.studentRegNo
+        holder.dept.text = "${s.department} - ${s.academicYear}"
 
-        holder.itemView.setOnClickListener {
-            listener.onItemClick(s)
-        }
-        holder.editBtn.setOnClickListener {
-            listener.onEdit(s)
-        }
-        holder.delBtn.setOnClickListener {
-            listener.onDelete(s)
-        }
+        holder.itemView.setOnClickListener { listener.onItemClick(s) }
+        holder.editBtn.setOnClickListener { listener.onEdit(s) }
+        holder.delBtn.setOnClickListener { listener.onDelete(s) }
     }
 
     override fun getItemCount(): Int = items.size
