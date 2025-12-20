@@ -1,147 +1,115 @@
 package com.example.studentattendancesystem
 
 import android.os.Bundle
-import android.widget.*
+import android.widget.ArrayAdapter
+import android.widget.Button
+import android.widget.EditText
+import android.widget.Spinner
+import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import com.google.firebase.firestore.FirebaseFirestore
 
 class AddStudentActivity : AppCompatActivity() {
 
-    private lateinit var db: SQLiteHelper
-    private lateinit var nameInput: EditText
-    private lateinit var regInput: EditText
-    private lateinit var departmentSpinner: Spinner
-    private lateinit var yearSpinner: Spinner
-    private lateinit var emailInput: EditText
-    private lateinit var phoneInput: EditText
-    private lateinit var addBtn: Button
-    private lateinit var clearBtn: Button
+    private lateinit var db: FirebaseFirestore
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_add_student)
 
-        db = SQLiteHelper(this)
+        db = FirebaseFirestore.getInstance()
 
-        nameInput = findViewById(R.id.nameInput)
-        regInput = findViewById(R.id.regInput)
-        departmentSpinner = findViewById(R.id.departmentSpinner)
-        yearSpinner = findViewById(R.id.yearSpinner)
-        emailInput = findViewById(R.id.emailInput)
-        phoneInput = findViewById(R.id.phoneInput)
-        addBtn = findViewById(R.id.addBtn)
-        clearBtn = findViewById(R.id.clearBtn)
+        val nameInput = findViewById<EditText>(R.id.nameInput)
+        val regInput = findViewById<EditText>(R.id.regInput)
+        val emailInput = findViewById<EditText>(R.id.emailInput)
+        val phoneInput = findViewById<EditText>(R.id.phoneInput)
 
-        setupSpinners()
+        val deptSpinner = findViewById<Spinner>(R.id.departmentSpinner)
+        val yearSpinner = findViewById<Spinner>(R.id.yearSpinner)
+
+        val addBtn = findViewById<Button>(R.id.addBtn)
+        val clearBtn = findViewById<Button>(R.id.clearBtn)
+
+        // Spinners Setup
+        val deptList = arrayOf("Select Department", "ICT", "Engineering", "Bio Systems", "Management")
+        val deptAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, deptList)
+        deptSpinner.adapter = deptAdapter
+
+        val yearList = arrayOf("Select Year", "1st Year", "2nd Year", "3rd Year", "4th Year")
+        val yearAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_dropdown_item, yearList)
+        yearSpinner.adapter = yearAdapter
 
         addBtn.setOnClickListener {
-            addStudent()
+            val name = nameInput.text.toString().trim()
+            val reg = regInput.text.toString().trim()
+            val email = emailInput.text.toString().trim()
+            val phone = phoneInput.text.toString().trim()
+
+            val selectedDept = deptSpinner.selectedItem.toString()
+            val selectedYear = yearSpinner.selectedItem.toString()
+
+            if (name.isEmpty() || reg.isEmpty()) {
+                Toast.makeText(this, "Name and Reg No are required!", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            if (selectedDept == "Select Department" || selectedYear == "Select Year") {
+                Toast.makeText(this, "Please select Department and Year", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            }
+
+            // === අලුත් කොටස: කලින් මේ Reg No එක තියෙනවද කියලා බලනවා ===
+            checkAndSaveStudent(name, reg, selectedDept, selectedYear, email, phone)
         }
 
         clearBtn.setOnClickListener {
-            clearFields()
+            nameInput.text.clear()
+            regInput.text.clear()
+            emailInput.text.clear()
+            phoneInput.text.clear()
+            deptSpinner.setSelection(0)
+            yearSpinner.setSelection(0)
         }
     }
 
-    private fun setupSpinners() {
-        // Department Spinner
-        val departments = arrayOf(
-            "Select Department",
-            "Computer Science",
-            "Information Technology",
-            "Software Engineering",
-            "Business Management",
-            "Engineering",
-            "Arts"
+    private fun checkAndSaveStudent(name: String, reg: String, dept: String, year: String, email: String, phone: String) {
+        // Firebase එකෙන් අහනවා මේ Reg No එක තියෙන අය ඉන්නවද කියලා
+        db.collection("students")
+            .whereEqualTo("studentRegNo", reg)
+            .get()
+            .addOnSuccessListener { documents ->
+                if (!documents.isEmpty) {
+                    // දැනටමත් කෙනෙක් ඉන්නවා නම් Error එකක් පෙන්වනවා
+                    Toast.makeText(this, "⚠️ Student with Reg No $reg already exists!", Toast.LENGTH_LONG).show()
+                } else {
+                    // කවුරුත් නෑ, ඒ කියන්නේ Save කරන්න පුළුවන්
+                    saveToFirebase(name, reg, dept, year, email, phone)
+                }
+            }
+            .addOnFailureListener {
+                Toast.makeText(this, "Error checking database", Toast.LENGTH_SHORT).show()
+            }
+    }
+
+    private fun saveToFirebase(name: String, reg: String, dept: String, year: String, email: String, phone: String) {
+        val studentMap = hashMapOf(
+            "studentName" to name,
+            "studentRegNo" to reg,
+            "department" to dept,
+            "academicYear" to year,
+            "email" to email,
+            "phone" to phone,
+            "timestamp" to System.currentTimeMillis()
         )
 
-        val deptAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, departments)
-        deptAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        departmentSpinner.adapter = deptAdapter
-
-        // Year Spinner
-        val years = arrayOf("Select Year", "1st Year", "2nd Year", "3rd Year", "4th Year")
-        val yearAdapter = ArrayAdapter(this, android.R.layout.simple_spinner_item, years)
-        yearAdapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item)
-        yearSpinner.adapter = yearAdapter
-    }
-
-    private fun addStudent() {
-        val name = nameInput.text.toString().trim()
-        val reg = regInput.text.toString().trim()
-        val department = departmentSpinner.selectedItem.toString()
-        val year = yearSpinner.selectedItem.toString()
-        val email = emailInput.text.toString().trim()
-        val phone = phoneInput.text.toString().trim()
-
-        // Validation
-        if (name.isEmpty()) {
-            nameInput.error = "Name is required"
-            nameInput.requestFocus()
-            return
-        }
-
-        if (reg.isEmpty()) {
-            regInput.error = "Registration number is required"
-            regInput.requestFocus()
-            return
-        }
-
-        if (department == "Select Department") {
-            Toast.makeText(this, "Please select a department", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        if (year == "Select Year") {
-            Toast.makeText(this, "Please select a year", Toast.LENGTH_SHORT).show()
-            return
-        }
-
-        // Optional email validation
-        if (email.isNotEmpty() && !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
-            emailInput.error = "Invalid email format"
-            emailInput.requestFocus()
-            return
-        }
-
-        // Optional phone validation
-        if (phone.isNotEmpty() && phone.length < 10) {
-            phoneInput.error = "Phone number must be at least 10 digits"
-            phoneInput.requestFocus()
-            return
-        }
-
-        // Check if registration number already exists
-        if (db.studentRegExists(reg)) {
-            regInput.error = "This registration number already exists"
-            regInput.requestFocus()
-            return
-        }
-
-        // Insert student
-        val id = db.addStudent(
-            studentId = reg,
-            name = name,
-            department = department,
-            year = year,
-            email = if (email.isEmpty()) null else email,
-            phone = if (phone.isEmpty()) null else phone
-        )
-
-        if (id > 0) {
-            Toast.makeText(this, "Student added successfully!", Toast.LENGTH_SHORT).show()
-            clearFields()
-        } else {
-            Toast.makeText(this, "Error adding student", Toast.LENGTH_SHORT).show()
-        }
-    }
-
-    private fun clearFields() {
-        nameInput.text.clear()
-        regInput.text.clear()
-        emailInput.text.clear()
-        phoneInput.text.clear()
-        departmentSpinner.setSelection(0)
-        yearSpinner.setSelection(0)
-        nameInput.requestFocus()
+        db.collection("students")
+            .add(studentMap)
+            .addOnSuccessListener {
+                Toast.makeText(this, "✅ Student Added Successfully!", Toast.LENGTH_SHORT).show()
+                finish() // Save වුණාට පස්සේ Form එක වහලා දානවා
+            }
+            .addOnFailureListener { e ->
+                Toast.makeText(this, "Error: ${e.message}", Toast.LENGTH_SHORT).show()
+            }
     }
 }

@@ -106,6 +106,7 @@
             android:layout_height="60dp"
             android:text="📷 Scan QR Code"
             android:textSize="16sp"
+            android:textColor="#FFFFFF"
             android:backgroundTint="#000000"
             android:layout_marginBottom="12dp"/>
 
@@ -115,6 +116,7 @@
             android:layout_height="60dp"
             android:text="🔳 My QR Code"
             android:textSize="16sp"
+            android:textColor="#FFFFFF"
             android:backgroundTint="#000000"
             android:layout_marginBottom="12dp"
             android:visibility="gone"/>

@@ -6,18 +6,35 @@
     android:gravity="center"
     android:padding="20dp">
 
+    <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Generate Class QR"
+        android:textSize="20sp"
+        android:textStyle="bold"
+        android:layout_marginBottom="16dp"/>
+
+    <Spinner
+        android:id="@+id/qrSubjectSpinner"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:padding="12dp"
+        android:background="@android:drawable/btn_dropdown"
+        android:layout_marginBottom="16dp"/>
+
+    <Button
+        android:id="@+id/btnGenerateQR"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="Generate Now"
+        android:backgroundTint="#3B82F6"
+        android:layout_marginBottom="16dp"/>
+
     <ImageView
         android:id="@+id/qrImageView"
         android:layout_width="250dp"
         android:layout_height="250dp"
+        android:visibility="gone"
         android:layout_marginBottom="10dp"/>
 
-    <TextView
-        android:id="@+id/qrRegText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="REG NO"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:textColor="#000000"/>
 </LinearLayout>
